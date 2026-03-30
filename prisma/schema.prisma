@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String         @id @default(uuid())
+  full_name        String
+  avatar_url       String?
+  phone            String         @unique
+  password_hash    String
+  elo_rating       Int            @default(1000)
+  is_provisional   Boolean        @default(true)
+  trust_score      Int            @default(100)
+  total_matches    Int            @default(0)
+  wins             Int            @default(0)
+  losses           Int            @default(0)
+  created_at       DateTime       @default(now())
+
+  // Mối quan hệ với các bảng khác
+  match_requests   MatchRequest[]
+  matches_as_a     Match[]        @relation("PlayerA")
+  matches_as_b     Match[]        @relation("PlayerB")
+  disputes         Dispute[]
+}
+
+model Court {
+  id               String         @id @default(uuid())
+  name             String
+  address          String
+  latitude         Float
+  longitude        Float
+  qr_code_value    String         @unique
+  match_requests   MatchRequest[]
+}
+
+model MatchRequest {
+  id               String         @id @default(uuid())
+  creator_id       String
+  court_id         String
+  scheduled_time   DateTime
+  is_ranked        Boolean        @default(true)
+  status           String         @default("Open") // Open, Matched, Expired
+  expires_at       DateTime
+  created_at       DateTime       @default(now())
+
+  creator          User           @relation(fields: [creator_id], references: [id])
+  court            Court          @relation(fields: [court_id], references: [id])
+  matches          Match[]
+}
+
+model Match {
+  id                     String       @id @default(uuid())
+  request_id             String
+  player_a_id            String
+  player_b_id            String
+  status                 String       @default("Pending") // Pending, In_Progress, Waiting_Confirm, Completed, Disputed, Cancelled
+  check_in_time_a        DateTime?
+  check_in_time_b        DateTime?
+  match_duration_minutes Int?
+  scores_data            Json?
+  intensity_feedback     Int?
+  elo_change_a           Int?
+  elo_change_b           Int?
+  created_at             DateTime     @default(now())
+
+  request                MatchRequest @relation(fields: [request_id], references: [id])
+  player_a               User         @relation("PlayerA", fields: [player_a_id], references: [id])
+  player_b               User         @relation("PlayerB", fields: [player_b_id], references: [id])
+  disputes               Dispute[]
+}
+
+model Dispute {
+  id               String   @id @default(uuid())
+  match_id         String
+  reporter_id      String
+  reason           String
+  proof_image_url  String?
+  status           String   @default("Pending") // Pending, Resolved
+  created_at       DateTime @default(now())
+
+  match            Match    @relation(fields: [match_id], references: [id])
+  reporter         User     @relation(fields: [reporter_id], references: [id])
+}
