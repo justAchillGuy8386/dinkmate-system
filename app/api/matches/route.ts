@@ -55,3 +55,36 @@ export async function POST(request: Request) {
     );
   }
 }
+
+//LẤY DANH SÁCH TRẬN ĐẤU (GET)
+export async function GET() {
+  try {
+    const matches = await prisma.match.findMany({
+      orderBy: { created_at: 'desc' }, // Trận mới nhất xếp lên đầu
+      include: {
+        player_a: {
+          select: { full_name: true, elo_rating: true }
+        },
+        player_b: {
+          select: { full_name: true, elo_rating: true }
+        },
+        request: {
+          include: {
+            court: { select: { name: true, address: true } }
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(
+      { message: 'Lấy danh sách trận đấu thành công!', data: matches },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Lỗi lấy danh sách trận đấu:", error);
+    return NextResponse.json(
+      { error: 'Lỗi hệ thống khi tải trận đấu' },
+      { status: 500 }
+    );
+  }
+}
