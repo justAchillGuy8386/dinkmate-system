@@ -33,8 +33,8 @@ model Court {
   id               String         @id @default(uuid())
   name             String
   address          String
-  latitude         Float
-  longitude        Float
+  latitude         Float          // vĩ độ
+  longitude        Float          // kinh độ
   qr_code_value    String         @unique
   match_requests   MatchRequest[]
 }
