@@ -1,38 +1,48 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../lib/prisma';
 
-// Hàm tính ELO cơ bản (K-factor = 32)
-function calculateElo(rating1: number, rating2: number, isWin: boolean) {
-  const K = 32;
-  const expectedScore = 1 / (1 + Math.pow(10, (rating2 - rating1) / 400));
-  const actualScore = isWin ? 1 : 0;
-  return Math.round(rating1 + K * (actualScore - expectedScore));
-}
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { match_id, winner_id, scores_data, intensity_feedback } = body;
 
+    // Lấy thông tin trận đấu trước (không dùng transaction ở bước này vì cần gọi API ngoài)
+    const match = await prisma.match.findUnique({
+      where: { id: match_id },
+      include: { player_a: true, player_b: true }
+    });
+
+    if (!match) throw new Error("Không tìm thấy trận đấu!");
+    if (match.status !== "In_Progress") throw new Error("Trận đấu chưa diễn ra hoặc đã kết thúc!");
+
+    const isPlayerA_Winner = match.player_a_id === winner_id;
+
+    // GỌI SANG PYTHON AI ĐỂ LẤY KẾT QUẢ ELO MỚI
+    const pythonResponse = await fetch('http://127.0.0.1:8000/api/calculate-elo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        player_a_elo: match.player_a.elo_rating,
+        player_b_elo: match.player_b.elo_rating,
+        is_player_a_winner: isPlayerA_Winner,
+        scores_data: scores_data,
+        intensity_feedback: intensity_feedback
+      })
+    });
+
+    if (!pythonResponse.ok) {
+      throw new Error("Lỗi khi kết nối với AI Python tính điểm!");
+    }
+
+    const aiResult = await pythonResponse.json();
+    // Giả sử Python trả về: { new_elo_a: 1180, new_elo_b: 2666, elo_change_a: +14, elo_change_b: -14 }
+    const newEloA = aiResult.new_elo_a;
+    const newEloB = aiResult.new_elo_b;
+    const eloChangeA = aiResult.elo_change_a;
+    const eloChangeB = aiResult.elo_change_b;
+
+    // TRANSACTION: LƯU TOÀN BỘ VÀO DATABASE
     const result = await prisma.$transaction(async (tx) => {
-      // Lấy thông tin trận đấu và 2 người chơi
-      const match = await tx.match.findUnique({
-        where: { id: match_id },
-        include: { player_a: true, player_b: true }
-      });
-
-      if (!match) throw new Error("Không tìm thấy trận đấu!");
-      if (match.status !== "In_Progress") throw new Error("Trận đấu chưa diễn ra hoặc đã kết thúc!");
-
-      // Xác định ai thắng, ai thua để tính ELO
-      const isPlayerA_Winner = match.player_a_id === winner_id;
-      
-      const newEloA = calculateElo(match.player_a.elo_rating, match.player_b.elo_rating, isPlayerA_Winner);
-      const newEloB = calculateElo(match.player_b.elo_rating, match.player_a.elo_rating, !isPlayerA_Winner);
-
-      const eloChangeA = newEloA - match.player_a.elo_rating;
-      const eloChangeB = newEloB - match.player_b.elo_rating;
-
       // Cập nhật trạng thái Trận đấu
       const updatedMatch = await tx.match.update({
         where: { id: match_id },
@@ -40,13 +50,13 @@ export async function POST(request: Request) {
           status: "Completed",
           scores_data: scores_data,
           intensity_feedback: intensity_feedback,
-          match_duration_minutes: 60, // Giả sử đánh 1 tiếng, thực tế có thể tính từ check_in_time
+          match_duration_minutes: 60, 
           elo_change_a: eloChangeA,
           elo_change_b: eloChangeB,
         }
       });
 
-      // Cập nhật Profile Người chơi A (Điểm số & Thống kê)
+      // Cập nhật Profile Người chơi A
       await tx.user.update({
         where: { id: match.player_a_id },
         data: {
@@ -54,7 +64,7 @@ export async function POST(request: Request) {
           total_matches: { increment: 1 },
           wins: isPlayerA_Winner ? { increment: 1 } : undefined,
           losses: !isPlayerA_Winner ? { increment: 1 } : undefined,
-          is_provisional: false, // Đã đánh xong trận đầu, bỏ mác "Đang định hạng"
+          is_provisional: false, 
         }
       });
 
