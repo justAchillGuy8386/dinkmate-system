@@ -41,6 +41,10 @@ export async function POST(request: Request) {
     const eloChangeA = aiResult.elo_change_a;
     const eloChangeB = aiResult.elo_change_b;
 
+    let intensityInt = 2; // Mặc định Medium là số 2
+    if (intensity_feedback === "Low") intensityInt = 1;
+    if (intensity_feedback === "High") intensityInt = 3;
+
     // TRANSACTION: LƯU TOÀN BỘ VÀO DATABASE
     const result = await prisma.$transaction(async (tx) => {
       // Cập nhật trạng thái Trận đấu
@@ -49,7 +53,7 @@ export async function POST(request: Request) {
         data: {
           status: "Completed",
           scores_data: scores_data,
-          intensity_feedback: intensity_feedback,
+          intensity_feedback: intensityInt,
           match_duration_minutes: 60, 
           elo_change_a: eloChangeA,
           elo_change_b: eloChangeB,
