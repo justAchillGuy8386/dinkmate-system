@@ -73,6 +73,8 @@ model Match {
   player_a               User         @relation("PlayerA", fields: [player_a_id], references: [id])
   player_b               User         @relation("PlayerB", fields: [player_b_id], references: [id])
   disputes               Dispute[]
+  submitted_by_a Boolean @default(false)
+  submitted_by_b Boolean @default(false)
 }
 
 model Dispute {
@@ -82,7 +84,7 @@ model Dispute {
   reason           String
   proof_image_url  String?
   status           String   @default("Pending") // Pending, Resolved
-  created_at       DateTime @default(now())
+  created_by       String
 
   match            Match    @relation(fields: [match_id], references: [id])
   reporter         User     @relation(fields: [reporter_id], references: [id])
