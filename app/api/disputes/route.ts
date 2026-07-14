@@ -1,46 +1,71 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import prisma from '@/lib/prisma'; // Cập nhật lại đường dẫn cho đúng nếu cần
 
 // 1. NGƯỜI CHƠI GỬI KHIẾU NẠI (POST)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { match_id, reporter_id, reason, proof_image_url } = body;
+    // Chấp nhận cả user_id (từ Flutter gửi lên) hoặc reporter_id
+    const reporterId = body.user_id || body.reporter_id;
+    const { match_id, reason, proof_image_url } = body;
 
-    // Dùng Transaction để đảm bảo vừa tạo đơn, vừa khóa trận đấu cùng lúc
+    // Dùng Transaction để đảm bảo tính toàn vẹn
     const result = await prisma.$transaction(async (tx) => {
       
-      // Kiểm tra xem trận đấu có tồn tại không
       const match = await tx.match.findUnique({
         where: { id: match_id }
       });
 
       if (!match) throw new Error("Không tìm thấy trận đấu!");
-      if (match.status === "Disputed") throw new Error("Trận đấu này đang được xử lý khiếu nại rồi!");
 
-      // Tạo tranh chấp trong bảng Dispute
-      const newDispute = await tx.dispute.create({
-        data: {
-          match_id,
-          reporter_id,
-          reason,
-          proof_image_url,
-          status: "Pending" // Trạng thái: Chờ Admin xử lý
+      // 1. Tìm xem người NÀY đã nộp bằng chứng chưa
+      const existingDispute = await tx.dispute.findFirst({
+        where: {
+          match_id: match_id,
+          reporter_id: reporterId,
         }
       });
 
-      // Khóa trạng thái trận đấu thành "Disputed"
-      await tx.match.update({
-        where: { id: match_id },
-        data: { status: "Disputed" }
-      });
+      let disputeRecord;
 
-      return newDispute;
+      if (existingDispute) {
+        // Đã có -> Bổ sung thêm ảnh và lý do
+        disputeRecord = await tx.dispute.update({
+          where: { id: existingDispute.id },
+          data: {
+            reason: `${existingDispute.reason} | App bổ sung: ${reason}`,
+            proof_image_url: proof_image_url || existingDispute.proof_image_url,
+            status: "Pending" 
+          }
+        });
+      } else {
+        // Chưa có -> Tạo mới hoàn toàn đúng chuẩn Prisma strict
+        disputeRecord = await tx.dispute.create({
+          data: {
+            match: { connect: { id: match_id } },
+            reporter: { connect: { id: reporterId } },
+            created_by: reporterId,
+            reason: reason,
+            proof_image_url: proof_image_url,
+            status: "Pending"
+          }
+        });
+      }
+
+      // 2. Chốt khóa trạng thái trận đấu thành "Disputed" (nếu nó chưa bị khóa)
+      if (match.status !== "Disputed") {
+        await tx.match.update({
+          where: { id: match_id },
+          data: { status: "Disputed" }
+        });
+      }
+
+      return disputeRecord;
     });
 
     return NextResponse.json(
       { message: 'Gửi khiếu nại thành công! Hệ thống đã ghi nhận và chờ Admin xử lý.', data: result },
-      { status: 201 }
+      { status: 200 }
     );
 
   } catch (error: any) {
@@ -56,10 +81,10 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const disputes = await prisma.dispute.findMany({
-      where: { status: "Pending" }, // Chỉ lấy những ca chưa xử lý
-      orderBy: { created_at: 'desc' },
+      where: { status: "Pending" }, 
+      // ĐÃ TẠM XÓA `orderBy: { created_at: 'desc' }` VÌ BẢNG DISPUTE CHƯA CÓ CỘT NÀY
       include: {
-        reporter: { select: { full_name: true, phone: true } }, // Lấy tên và SĐT người kiện để Admin gọi điện
+        reporter: { select: { full_name: true, phone: true } }, 
         match: {
           include: {
             player_a: { select: { full_name: true } },
