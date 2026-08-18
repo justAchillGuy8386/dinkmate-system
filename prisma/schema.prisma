@@ -84,7 +84,6 @@ model Dispute {
   reason           String
   proof_image_url  String?
   status           String   @default("Pending") // Pending, Resolved
-  created_by       String
 
   match            Match    @relation(fields: [match_id], references: [id])
   reporter         User     @relation(fields: [reporter_id], references: [id])
