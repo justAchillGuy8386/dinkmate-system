@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         scheduled_time: matchTime,
         is_ranked: is_ranked ?? true,
         expires_at: expiresTime,
-        status: "Open", // Mặc định mở
+        status: 'Searching',
       },
     });
 

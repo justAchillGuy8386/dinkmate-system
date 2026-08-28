@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         disputeRecord = await tx.dispute.update({
           where: { id: existingDispute.id },
           data: {
-            reason: `${existingDispute.reason} | App bổ sung: ${reason}`,
+            reason: reason,
             proof_image_url: proof_image_url || existingDispute.proof_image_url,
             status: "Pending" 
           }
@@ -42,9 +42,8 @@ export async function POST(request: Request) {
         // Chưa có -> Tạo mới hoàn toàn đúng chuẩn Prisma strict
         disputeRecord = await tx.dispute.create({
           data: {
-            match: { connect: { id: match_id } },
-            reporter: { connect: { id: reporterId } },
-            created_by: reporterId,
+            match_id: match_id,
+            reporter_id: reporterId,
             reason: reason,
             proof_image_url: proof_image_url,
             status: "Pending"
