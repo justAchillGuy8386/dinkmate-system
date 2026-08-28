@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     // Lấy danh sách người chơi đang chờ tìm trận Xếp Hạng
     const openRequests = await prisma.matchRequest.findMany({
       where: { 
-        status: 'Open', 
+        status: 'Searching',
         is_ranked: true 
       },
       include: { 
@@ -34,6 +34,8 @@ export async function POST(request: Request) {
     });
 
     const availablePlayers = Array.from(uniquePlayers.values());
+
+    console.log("DANH SÁCH GỬI CHO AI:", availablePlayers);
 
     if (availablePlayers.length < 2) {
        return NextResponse.json({ message: 'Chưa đủ người chơi hợp lệ' }, { status: 200 });
