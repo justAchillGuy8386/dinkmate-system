@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         disputeRecord = await tx.dispute.update({
           where: { id: existingDispute.id },
           data: {
-            reason: `${existingDispute.reason} | App bổ sung: ${reason}`,
+            reason: reason,
             proof_image_url: proof_image_url || existingDispute.proof_image_url,
             status: "Pending" 
           }
