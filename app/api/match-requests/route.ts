@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // 1. TẠO KÈO ĐẤU MỚI (POST)
 export async function POST(request: Request) {
   try {
@@ -11,14 +13,16 @@ export async function POST(request: Request) {
     const matchTime = new Date(scheduled_time);
     const expiresTime = new Date(matchTime.getTime() + 30 * 60000); // Cộng thêm 30 phút
 
+    const booleanRanked = body.is_ranked === undefined ? true : (body.is_ranked === true || body.is_ranked === 'true');
+
     const newRequest = await prisma.matchRequest.create({
       data: {
         creator_id,
         court_id,
         scheduled_time: matchTime,
-        is_ranked: is_ranked ?? true,
+        is_ranked: booleanRanked,
         expires_at: expiresTime,
-        status: 'Searching',
+        status: is_ranked ? "Searching" : "Open",
       },
     });
 
