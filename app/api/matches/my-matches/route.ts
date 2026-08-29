@@ -3,7 +3,6 @@ import prisma from '@/lib/prisma';
 
 export async function GET(request: Request) {
   try {
-    // Lấy userId từ URL
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
@@ -11,28 +10,47 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Thiếu userId' }, { status: 400 });
     }
 
-    // Lấy tất cả các trận đấu có sự tham gia của User này
     const matches = await prisma.match.findMany({
       where: {
         OR: [
           { player_a_id: userId },
           { player_b_id: userId }
         ]
+      },
+      include: {
+        request: {
+          select: {
+            is_ranked: true
+          }
+        }
       }
     });
 
-    // Tự động tìm xem ai là đối thủ để app Flutter dễ dùng
     const enrichedMatches = await Promise.all(matches.map(async (match) => {
       const opponentId = match.player_a_id === userId ? match.player_b_id : match.player_a_id;
       
-      // Kéo thông tin đối thủ từ bảng User
       const opponent = await prisma.user.findUnique({
         where: { id: opponentId },
         select: { full_name: true, elo_rating: true, avatar_url: true }
       });
 
+      const isPlayerA = match.player_a_id === userId;
+      const eloChangeA = match.elo_change_a ?? 0;
+      const eloChangeB = match.elo_change_b ?? 0;
+      let winnerId = "";
+      if (eloChangeA > 0) winnerId = match.player_a_id;
+      else if (eloChangeB > 0) winnerId = match.player_b_id;
+
+      const myEloChange = isPlayerA ? eloChangeA : eloChangeB;
+      const isWinner = winnerId ? winnerId === userId : myEloChange > 0;
+      const isRanked = match.request?.is_ranked ?? false;
+
       return {
         ...match,
+        is_ranked: isRanked,
+        winner_id: winnerId,
+        is_winner: isWinner,
+        elo_change: isRanked ? Math.abs(myEloChange) : 0,
         opponent_id: opponentId,
         opponent_name: opponent?.full_name ?? "Ẩn danh",
         opponent_elo: opponent?.elo_rating ?? 0,
@@ -40,7 +58,6 @@ export async function GET(request: Request) {
       };
     }));
 
-    // (Tùy chọn) Đảo ngược mảng để trận mới nhất lên đầu
     enrichedMatches.reverse();
 
     return NextResponse.json({ message: 'Thành công', data: enrichedMatches }, { status: 200 });
