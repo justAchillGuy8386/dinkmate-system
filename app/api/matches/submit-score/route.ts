@@ -70,6 +70,13 @@ export async function POST(request: Request) {
       const eloChangeA = aiResult.elo_change_a;
       const eloChangeB = aiResult.elo_change_b;
 
+            // Tính thời lượng trận đấu thực tế từ thời điểm check-in
+      const startTime = match.check_in_time_a && match.check_in_time_b
+        ? new Date(Math.max(new Date(match.check_in_time_a).getTime(), new Date(match.check_in_time_b).getTime()))
+        : match.created_at;
+      const durationMs = Date.now() - new Date(startTime).getTime();
+      const actualDurationMinutes = Math.max(1, Math.round(durationMs / 60000));
+
       let intensityInt = 2;
       if (intensity_feedback === "Low") intensityInt = 1;
       if (intensity_feedback === "High") intensityInt = 3;
@@ -82,7 +89,7 @@ export async function POST(request: Request) {
             submitted_by_a: true,
             submitted_by_b: true,
             intensity_feedback: intensityInt,
-            match_duration_minutes: 60, 
+            match_duration_minutes: actualDurationMinutes, 
             elo_change_a: eloChangeA,
             elo_change_b: eloChangeB,
           }

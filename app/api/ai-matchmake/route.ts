@@ -3,6 +3,15 @@ import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
+    // Tự động quét và cập nhật trạng thái 'Expired' cho các kèo đã quá hạn
+    await prisma.matchRequest.updateMany({
+      where: {
+        status: { in: ['Searching', 'Open'] },
+        expires_at: { lt: new Date() },
+      },
+      data: { status: 'Expired' },
+    });
+
     // Lấy danh sách người chơi đang chờ tìm trận Xếp Hạng
     const openRequests = await prisma.matchRequest.findMany({
       where: { 
