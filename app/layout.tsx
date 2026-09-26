@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
+import { AntdRegistry } from "@ant-design/nextjs-registry";
 import "./globals.css";
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -10,14 +11,9 @@ const beVietnamPro = Be_Vietnam_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "DinkMate - Bảng Xếp Hạng & Đấu Kèo Pickleball Thông Minh",
-  description: "Cổng thông tin & Bảng xếp hạng ELO người chơi Pickleball toàn quốc. Ghép trận đối thủ theo ELO tương đương và GPS thực tế tại cụm sân.",
+  title: "DinkMate — Nền Tảng Xếp Hạng & Ghép Kèo Pickleball",
+  description: "Chuẩn ELO USAPA/DUPR. Trí tuệ nhân tạo ghép cặp thực địa. Check-in mã QR tại sân.",
   keywords: ["Pickleball", "DinkMate", "Bảng xếp hạng Pickleball", "Ghép kèo Pickleball", "ELO Pickleball Việt Nam"],
-  openGraph: {
-    title: "DinkMate - Bảng Xếp Hạng & Đấu Kèo Pickleball Thông Minh",
-    description: "Hệ thống xếp hạng ELO và ghép trận bằng AI cho cộng đồng người chơi Pickleball Việt Nam.",
-    type: "website",
-  }
 };
 
 export default function RootLayout({
@@ -26,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${beVietnamPro.variable} ${beVietnamPro.className} h-full dark`}>
+    <html lang="vi" className={`${beVietnamPro.variable} ${beVietnamPro.className} h-full`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -35,8 +31,8 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${beVietnamPro.className} min-h-full flex flex-col bg-[#07090E] text-slate-100 antialiased`}>
-        {children}
+      <body className={`${beVietnamPro.className} min-h-full flex flex-col bg-white text-[#1D1D1F] antialiased`}>
+        <AntdRegistry>{children}</AntdRegistry>
       </body>
     </html>
   );
