@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     const isPlayerA_Winner = match.player_a_id === final_winner_id;
 
-    // 2. GỌI SANG PYTHON AI 
+    // 2. GỌI SANG PYTHON AI TÍNH ELO VỚI TRẠNG THÁI PROVISIONAL
     const pythonResponse = await fetch('http://127.0.0.1:8000/api/calculate-elo', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,7 +36,9 @@ export async function POST(request: Request) {
         player_b_elo: match.player_b.elo_rating,
         is_player_a_winner: isPlayerA_Winner,
         scores_data: final_scores_data || match.scores_data, // Lấy điểm Admin chốt, nếu ko có thì lấy điểm tạm
-        intensity_feedback: String(match.intensity_feedback || "Medium") // Mặc định Medium
+        intensity_feedback: String(match.intensity_feedback || "Medium"),
+        is_player_a_provisional: match.player_a.is_provisional,
+        is_player_b_provisional: match.player_b.is_provisional,
       })
     });
 
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
           total_matches: { increment: 1 },
           wins: isPlayerA_Winner ? { increment: 1 } : undefined,
           losses: !isPlayerA_Winner ? { increment: 1 } : undefined,
+          is_provisional: false,
         }
       });
 
@@ -95,10 +98,11 @@ export async function POST(request: Request) {
           total_matches: { increment: 1 },
           wins: !isPlayerA_Winner ? { increment: 1 } : undefined,
           losses: isPlayerA_Winner ? { increment: 1 } : undefined,
+          is_provisional: false,
         }
       });
 
-      // E. Trừng phạt người chơi cheat (Trừ 20 Trust Score)
+      // E. Trừng phạt người chơi gian lận (-20 Trust Score)
       if (liar_id) {
         await tx.user.update({
           where: { id: liar_id },

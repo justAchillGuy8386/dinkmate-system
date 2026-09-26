@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import prisma from '../../../../lib/prisma';
 
 export async function POST(request: Request) {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const isScoreMatched = (match.scores_data === scores_data);
 
     if (isScoreMatched) {
-      // 🟢 ĐỒNG THUẬN -> GỌI AI VÀ KẾT THÚC TRẬN (Giữ nguyên logic cũ của bạn)
+      // ĐỒNG THUẬN -> GỌI AI VÀ KẾT THÚC TRẬN
       const isPlayerA_Winner = match.player_a_id === winner_id;
 
       const pythonResponse = await fetch('http://127.0.0.1:8000/api/calculate-elo', {
@@ -56,7 +56,9 @@ export async function POST(request: Request) {
           player_b_elo: match.player_b.elo_rating,
           is_player_a_winner: isPlayerA_Winner,
           scores_data: scores_data,
-          intensity_feedback: intensity_feedback
+          intensity_feedback: intensity_feedback,
+          is_player_a_provisional: match.player_a.is_provisional,
+          is_player_b_provisional: match.player_b.is_provisional,
         })
       });
 
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
       const eloChangeA = aiResult.elo_change_a;
       const eloChangeB = aiResult.elo_change_b;
 
-            // Tính thời lượng trận đấu thực tế từ thời điểm check-in
+      // Tính thời lượng trận đấu thực tế từ thời điểm check-in
       const startTime = match.check_in_time_a && match.check_in_time_b
         ? new Date(Math.max(new Date(match.check_in_time_a).getTime(), new Date(match.check_in_time_b).getTime()))
         : match.created_at;
@@ -127,7 +129,7 @@ export async function POST(request: Request) {
       }, { status: 200 });
 
     } else {
-      // 🔴 LỆCH ĐIỂM -> GÂY TRANH CHẤP
+      // LỆCH ĐIỂM -> GÂY TRANH CHẤP
       await prisma.match.update({
         where: { id: match_id },
         data: {
