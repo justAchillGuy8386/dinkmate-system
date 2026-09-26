@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import prisma from '../../../../lib/prisma';
 
 export async function POST(request: Request) {
@@ -132,17 +132,10 @@ export async function POST(request: Request) {
 
       await prisma.dispute.create({
         data: {
-          // 1. Prisma đòi relation 'match', cho nó 'match'
           match: { connect: { id: match_id } },
-          
-          // 2. Prisma đòi relation 'reporter', cho nó 'reporter'
           reporter: { connect: { id: user_id } },
-          
-          // 3. Prisma CŨNG đòi cột vật lý 'created_by' (mà bạn vừa tạo lúc nãy)
-          created_by: user_id, 
-          
           reason: `Sai lệch điểm. Đối thủ báo: ${match.scores_data}. Bạn báo: ${scores_data}`,
-          status: 'Open'
+          status: 'Pending'
         }
       });
 

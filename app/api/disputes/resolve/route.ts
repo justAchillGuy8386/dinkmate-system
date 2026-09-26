@@ -8,7 +8,8 @@ export async function POST(request: Request) {
       match_id, 
       final_winner_id, 
       final_scores_data, 
-      liar_id // ID của người chơi bị xác định gian lận
+      liar_id,
+      resolution_notes
     } = body;
 
     if (!match_id || !final_winner_id) {
@@ -68,7 +69,11 @@ export async function POST(request: Request) {
       // B. Đóng TẤT CẢ các hồ sơ khiếu nại liên quan đến trận này
       await tx.dispute.updateMany({
         where: { match_id: match_id },
-        data: { status: "Resolved" }
+        data: {
+          status: "Resolved",
+          resolved_at: new Date(),
+          resolution_notes: resolution_notes || null,
+        }
       });
 
       // C. Cập nhật Profile Người chơi A

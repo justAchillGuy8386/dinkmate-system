@@ -80,8 +80,8 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     const disputes = await prisma.dispute.findMany({
-      where: { status: "Pending" }, 
-      // ĐÃ TẠM XÓA `orderBy: { created_at: 'desc' }` VÌ BẢNG DISPUTE CHƯA CÓ CỘT NÀY
+      where: { status: "Pending" },
+      orderBy: { created_at: 'desc' },
       include: {
         reporter: { select: { full_name: true, phone: true } }, 
         match: {
