@@ -11,3 +11,4 @@ export { default as MobileAppSection } from './MobileAppSection';
 export { default as PortalFooter } from './PortalFooter';
 export { default as PlayerDetailModal } from './PlayerDetailModal';
 export { default as QrAppModal } from './QrAppModal';
+export { default as LoginModal } from './LoginModal';

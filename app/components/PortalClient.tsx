@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { ConfigProvider } from 'antd';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ConfigProvider, message } from 'antd';
 import { UserItem, CourtItem, MatchHistoryItem } from './portalclient/types';
 import PortalHeader from './portalclient/PortalHeader';
 import HeroSection from './portalclient/HeroSection';
@@ -15,6 +15,7 @@ import MobileAppSection from './portalclient/MobileAppSection';
 import PortalFooter from './portalclient/PortalFooter';
 import PlayerDetailModal from './portalclient/PlayerDetailModal';
 import QrAppModal from './portalclient/QrAppModal';
+import LoginModal from './portalclient/LoginModal';
 
 export type { UserItem, CourtItem, MatchHistoryItem };
 
@@ -35,6 +36,43 @@ export default function PortalClient({
   const [tierFilter, setTierFilter] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserItem | null>(null);
+
+  // Load existing session from localStorage if present
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('dinkmate_user');
+      if (savedUser) {
+        setCurrentUser(JSON.parse(savedUser));
+      }
+    } catch {
+      // ignore parsing errors
+    }
+  }, []);
+
+  const handleLoginSuccess = (user: UserItem, token: string) => {
+    try {
+      localStorage.setItem('dinkmate_token', token);
+      localStorage.setItem('dinkmate_user', JSON.stringify(user));
+    } catch {
+      // ignore storage errors
+    }
+    setCurrentUser(user);
+    setIsLoginModalOpen(false);
+    message.success(`Đăng nhập thành công! Xin chào ${user.full_name}`);
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('dinkmate_token');
+      localStorage.removeItem('dinkmate_user');
+    } catch {
+      // ignore storage errors
+    }
+    setCurrentUser(null);
+    message.success('Đã đăng xuất khỏi hệ thống');
+  };
 
   // Top 3 for Podium
   const topThree = useMemo(() => {
@@ -120,7 +158,12 @@ export default function PortalClient({
     >
       <div className="min-h-screen bg-white text-[#1D1D1F] flex flex-col">
         {/* Minimal Header */}
-        <PortalHeader onOpenQrModal={() => setIsQrModalOpen(true)} />
+        <PortalHeader
+          currentUser={currentUser}
+          onOpenLoginModal={() => setIsLoginModalOpen(true)}
+          onLogout={handleLogout}
+          onOpenQrModal={() => setIsQrModalOpen(true)}
+        />
 
         <main className="flex-1">
           {/* Chapter 1: Hero */}
@@ -173,9 +216,16 @@ export default function PortalClient({
           onClose={() => setSelectedUser(null)}
           onOpenQrModal={() => setIsQrModalOpen(true)}
         />
+
         <QrAppModal
           open={isQrModalOpen}
           onClose={() => setIsQrModalOpen(false)}
+        />
+
+        <LoginModal
+          open={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
         />
       </div>
     </ConfigProvider>

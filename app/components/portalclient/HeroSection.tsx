@@ -10,6 +10,8 @@ export default function HeroSection() {
         Hệ thống xếp hạng & Ghép kèo Pickleball
       </div>
       <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-[#1D1D1F] leading-[1.1] mb-6">
+        DinkMate.
+        <br />
         Công bằng tuyệt đối.
         <br />
         Tranh tài thực tế.
