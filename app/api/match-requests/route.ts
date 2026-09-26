@@ -1,19 +1,46 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 // 1. TẠO KÈO ĐẤU MỚI (POST)
 export async function POST(request: Request) {
   try {
+    const authUser = getAuthenticatedUser(request);
     const body = await request.json();
-    const { creator_id, court_id, scheduled_time, is_ranked } = body;
+    const { creator_id: bodyCreatorId, court_id, scheduled_time, is_ranked } = body;
 
-    // Tính toán thời gian hết hạn của kèo 
-    const matchTime = new Date(scheduled_time);
-    const expiresTime = new Date(matchTime.getTime() + 30 * 60000); // Cộng thêm 30 phút
+    // Ưu tiên dùng userId từ JWT token xác thực để chống mạo danh
+    const creator_id = authUser ? authUser.userId : bodyCreatorId;
 
-    const booleanRanked = body.is_ranked === undefined ? true : (body.is_ranked === true || body.is_ranked === 'true');
+    if (!creator_id) {
+      return NextResponse.json({ error: 'Yêu cầu không hợp lệ hoặc chưa đăng nhập' }, { status: 401 });
+    }
+
+    // Kiểm tra người chơi và điểm uy tín (Trust Score)
+    const user = await prisma.user.findUnique({
+      where: { id: creator_id },
+      select: { id: true, trust_score: true, full_name: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'Không tìm thấy thông tin người chơi' }, { status: 404 });
+    }
+
+    const booleanRanked = is_ranked === undefined ? true : (is_ranked === true || is_ranked === 'true');
+
+    // Chặn người chơi có Trust Score < 60 tham gia Đấu Hạng (Ranked)
+    if (booleanRanked && user.trust_score < 60) {
+      return NextResponse.json({
+        error: `Điểm uy tín của bạn là ${user.trust_score}/100 (dưới 60 điểm). Bạn bị cấm tham gia Đấu Hạng do có hành vi vi phạm trước đó! Hãy tạo/tham gia các trận giao lưu để phục hồi điểm uy tín.`,
+        trust_score: user.trust_score
+      }, { status: 403 });
+    }
+
+    // Tính toán thời gian hết hạn của kèo
+    const matchTime = scheduled_time ? new Date(scheduled_time) : new Date();
+    const expiresTime = new Date(matchTime.getTime() + 30 * 60000); // Hết hạn sau 30 phút
 
     const newRequest = await prisma.matchRequest.create({
       data: {
@@ -22,7 +49,7 @@ export async function POST(request: Request) {
         scheduled_time: matchTime,
         is_ranked: booleanRanked,
         expires_at: expiresTime,
-        status: is_ranked ? "Searching" : "Open",
+        status: booleanRanked ? "Searching" : "Open",
       },
     });
 
@@ -44,21 +71,20 @@ export async function GET() {
   try {
     const openRequests = await prisma.matchRequest.findMany({
       where: {
-        status: "Open", // Chỉ lấy những kèo chưa có ai nhận
+        status: "Open",
         expires_at: {
-          gt: new Date(), // Chỉ lấy những kèo chưa hết hạn (thời gian hết hạn > hiện tại)
+          gt: new Date(),
         }
       },
       orderBy: {
-        scheduled_time: 'asc', // Sắp xếp kèo nào đánh sớm nhất lên đầu
+        scheduled_time: 'asc',
       },
-      // JOIN DỮ LIỆU
       include: {
         creator: {
-          select: { full_name: true, elo_rating: true, avatar_url: true }
+          select: { full_name: true, elo_rating: true, avatar_url: true, trust_score: true }
         },
         court: {
-          select: { name: true, address: true }
+          select: { name: true, address: true, latitude: true, longitude: true }
         }
       }
     });

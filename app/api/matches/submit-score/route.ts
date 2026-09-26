@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { match_id, user_id, winner_id, scores_data, intensity_feedback } = body;
+    const authUser = getAuthenticatedUser(request);
+    const { match_id, user_id: bodyUserId, winner_id, scores_data, intensity_feedback } = body;
+    // Ưu tiên xác thực danh tính từ JWT Token
+    const user_id = authUser ? authUser.userId : bodyUserId;
+    if (!user_id) {
+      return NextResponse.json({ error: 'Yêu cầu không hợp lệ hoặc chưa đăng nhập' }, { status: 401 });
+    }
 
     // Lấy thông tin trận đấu
     const match = await prisma.match.findUnique({

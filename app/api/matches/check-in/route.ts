@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { match_id, player_id, scanned_qr_code } = body;
+    const authUser = getAuthenticatedUser(request);
+    const { match_id, player_id: bodyPlayerId, scanned_qr_code } = body;
+    // Ưu tiên định danh từ Token
+    const player_id = authUser ? authUser.userId : bodyPlayerId;
+    if (!player_id) {
+      return NextResponse.json({ error: 'Chưa xác thực người dùng' }, { status: 401 });
+    }
 
     // Tìm trận đấu và gộp thông tin Court để lấy mã QR chuẩn
     const match = await prisma.match.findUnique({

@@ -1,25 +1,53 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // Đường dẫn import file prisma.ts bạn vừa tạo
+import prisma from '@/lib/prisma';
+import { hashPassword, generateToken } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { full_name, phone, password_hash, elo_rating } = body;
+    const { full_name, phone, password_hash, password, elo_rating } = body;
 
-    // dùng Prisma ra lệnh cho Database tạo bản ghi mới
+    const rawPassword = password || password_hash;
+    if (!phone || !rawPassword) {
+      return NextResponse.json({ error: 'Vui lòng cung cấp số điện thoại và mật khẩu' }, { status: 400 });
+    }
+
+    // Kiểm tra số điện thoại đã tồn tại chưa
+    const existingUser = await prisma.user.findUnique({
+      where: { phone: phone }
+    });
+    if (existingUser) {
+      return NextResponse.json({ error: 'Số điện thoại này đã được đăng ký tài khoản' }, { status: 409 });
+    }
+
+    // Mã hóa mật khẩu bằng bcryptjs
+    const secureHashedPassword = hashPassword(rawPassword);
+
+    // Tạo bản ghi mới trong Database
     const newUser = await prisma.user.create({
       data: {
-        full_name,
+        full_name: full_name || 'Người chơi mới',
         phone,
-        password_hash, // bước này sẽ dùng thư viện bcrypt để mã hóa mật khẩu
-        elo_rating: elo_rating || 1000, // Nếu không truyền elo, mặc định là 1000
-        is_provisional: true, // Gắn mác "Đang định hạng"
+        password_hash: secureHashedPassword,
+        elo_rating: elo_rating || 1000,
+        is_provisional: true, // Gán mác "Đang định hạng"
       },
     });
 
-    //Trả về kết quả thành công
+    // Sinh JWT Token để người dùng đăng nhập luôn
+    const token = generateToken({
+      userId: newUser.id,
+      phone: newUser.phone,
+    });
+
+    const { password_hash: _, ...safeUser } = newUser;
+
     return NextResponse.json(
-      { message: 'Tạo người chơi thành công!', data: newUser },
+      { 
+        message: 'Tạo tài khoản thành công!', 
+        token: token,
+        data: safeUser 
+      },
       { status: 201 }
     );
   } catch (error) {
@@ -33,9 +61,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
-    // Dùng Prisma để lấy danh sách người chơi
     const users = await prisma.user.findMany({
-      // Chỉ lấy các trường cần thiết, không lấy password_hash ra ngoài
       select: {
         id: true,
         full_name: true,
@@ -45,13 +71,11 @@ export async function GET() {
         total_matches: true,
         wins: true,
       },
-      // SẮP XẾP: Lấy người có điểm ELO cao nhất lên đầu (Làm bảng xếp hạng)
       orderBy: {
         elo_rating: 'desc',
       },
     });
 
-    // Trả dữ liệu về cho Client
     return NextResponse.json(
       { message: 'Lấy danh sách thành công!', data: users },
       { status: 200 }
