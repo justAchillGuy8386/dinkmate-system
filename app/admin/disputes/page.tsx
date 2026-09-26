@@ -90,7 +90,10 @@ export default function AdminDisputesPage() {
                 {/* Header Trận đấu */}
                 <div className="bg-red-50 p-4 border-b border-red-100 flex justify-between items-center">
                   <div>
-                    <span className="text-xs text-red-500 font-bold uppercase tracking-wider">Mã trận: {match.id}</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-red-500 font-bold uppercase tracking-wider">Mã trận: {match.id}</span>
+                      <span className="text-xs text-gray-400 mt-0.5">Thời gian khiếu nại: {dispute.created_at ? new Date(dispute.created_at).toLocaleString('vi-VN') : 'Không rõ'}</span>
+                    </div>
                     <h3 className="font-bold text-lg mt-1">{playerA.full_name} ⚡ {playerB.full_name}</h3>
                   </div>
                   <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full animate-pulse">Disputed</span>

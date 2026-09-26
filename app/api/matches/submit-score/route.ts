@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '../../../../lib/prisma';
+import { getAuthenticatedUser } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { match_id, user_id, winner_id, scores_data, intensity_feedback } = body;
+    const authUser = getAuthenticatedUser(request);
+    const { match_id, user_id: bodyUserId, winner_id, scores_data, intensity_feedback } = body;
+    // Ưu tiên xác thực danh tính từ JWT Token
+    const user_id = authUser ? authUser.userId : bodyUserId;
+    if (!user_id) {
+      return NextResponse.json({ error: 'Yêu cầu không hợp lệ hoặc chưa đăng nhập' }, { status: 401 });
+    }
 
     // Lấy thông tin trận đấu
     const match = await prisma.match.findUnique({
@@ -45,7 +52,7 @@ export async function POST(request: Request) {
     const isScoreMatched = (match.scores_data === scores_data);
 
     if (isScoreMatched) {
-      // 🟢 ĐỒNG THUẬN -> GỌI AI VÀ KẾT THÚC TRẬN (Giữ nguyên logic cũ của bạn)
+      // ĐỒNG THUẬN -> GỌI AI VÀ KẾT THÚC TRẬN
       const isPlayerA_Winner = match.player_a_id === winner_id;
 
       const pythonResponse = await fetch('http://127.0.0.1:8000/api/calculate-elo', {
@@ -56,7 +63,9 @@ export async function POST(request: Request) {
           player_b_elo: match.player_b.elo_rating,
           is_player_a_winner: isPlayerA_Winner,
           scores_data: scores_data,
-          intensity_feedback: intensity_feedback
+          intensity_feedback: intensity_feedback,
+          is_player_a_provisional: match.player_a.is_provisional,
+          is_player_b_provisional: match.player_b.is_provisional,
         })
       });
 
@@ -70,6 +79,13 @@ export async function POST(request: Request) {
       const eloChangeA = aiResult.elo_change_a;
       const eloChangeB = aiResult.elo_change_b;
 
+      // Tính thời lượng trận đấu thực tế từ thời điểm check-in
+      const startTime = match.check_in_time_a && match.check_in_time_b
+        ? new Date(Math.max(new Date(match.check_in_time_a).getTime(), new Date(match.check_in_time_b).getTime()))
+        : match.created_at;
+      const durationMs = Date.now() - new Date(startTime).getTime();
+      const actualDurationMinutes = Math.max(1, Math.round(durationMs / 60000));
+
       let intensityInt = 2;
       if (intensity_feedback === "Low") intensityInt = 1;
       if (intensity_feedback === "High") intensityInt = 3;
@@ -82,7 +98,7 @@ export async function POST(request: Request) {
             submitted_by_a: true,
             submitted_by_b: true,
             intensity_feedback: intensityInt,
-            match_duration_minutes: 60, 
+            match_duration_minutes: actualDurationMinutes, 
             elo_change_a: eloChangeA,
             elo_change_b: eloChangeB,
           }
@@ -120,7 +136,7 @@ export async function POST(request: Request) {
       }, { status: 200 });
 
     } else {
-      // 🔴 LỆCH ĐIỂM -> GÂY TRANH CHẤP
+      // LỆCH ĐIỂM -> GÂY TRANH CHẤP
       await prisma.match.update({
         where: { id: match_id },
         data: {
@@ -132,17 +148,10 @@ export async function POST(request: Request) {
 
       await prisma.dispute.create({
         data: {
-          // 1. Prisma đòi relation 'match', cho nó 'match'
           match: { connect: { id: match_id } },
-          
-          // 2. Prisma đòi relation 'reporter', cho nó 'reporter'
           reporter: { connect: { id: user_id } },
-          
-          // 3. Prisma CŨNG đòi cột vật lý 'created_by' (mà bạn vừa tạo lúc nãy)
-          created_by: user_id, 
-          
           reason: `Sai lệch điểm. Đối thủ báo: ${match.scores_data}. Bạn báo: ${scores_data}`,
-          status: 'Open'
+          status: 'Pending'
         }
       });
 

@@ -33,8 +33,8 @@ model Court {
   id               String         @id @default(uuid())
   name             String
   address          String
-  latitude         Float          // vĩ độ
-  longitude        Float          // kinh độ
+  latitude         Float          // Vĩ độ GPS
+  longitude        Float          // Kinh độ GPS
   qr_code_value    String         @unique
   match_requests   MatchRequest[]
 }
@@ -45,7 +45,7 @@ model MatchRequest {
   court_id         String
   scheduled_time   DateTime
   is_ranked        Boolean        @default(true)
-  status           String         @default("Open") // Open, Matched, Expired
+  status           String         @default("Open") // Open, Searching, Matched, Expired, Cancelled
   expires_at       DateTime
   created_at       DateTime       @default(now())
 
@@ -59,7 +59,7 @@ model Match {
   request_id             String
   player_a_id            String
   player_b_id            String
-  status                 String       @default("Pending") // Pending, In_Progress, Waiting_Confirm, Completed, Disputed, Cancelled
+  status                 String       @default("Pending") // Pending, In_Progress, Waiting_For_Opponent, Completed, Disputed, Cancelled
   check_in_time_a        DateTime?
   check_in_time_b        DateTime?
   match_duration_minutes Int?
@@ -73,18 +73,21 @@ model Match {
   player_a               User         @relation("PlayerA", fields: [player_a_id], references: [id])
   player_b               User         @relation("PlayerB", fields: [player_b_id], references: [id])
   disputes               Dispute[]
-  submitted_by_a Boolean @default(false)
-  submitted_by_b Boolean @default(false)
+  submitted_by_a         Boolean      @default(false)
+  submitted_by_b         Boolean      @default(false)
 }
 
 model Dispute {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   match_id         String
   reporter_id      String
   reason           String
   proof_image_url  String?
-  status           String   @default("Pending") // Pending, Resolved
+  status           String    @default("Pending") // Pending, Resolved
+  resolution_notes String?
+  resolved_at      DateTime?
+  created_at       DateTime  @default(now())
 
-  match            Match    @relation(fields: [match_id], references: [id])
-  reporter         User     @relation(fields: [reporter_id], references: [id])
+  match            Match     @relation(fields: [match_id], references: [id])
+  reporter         User      @relation(fields: [reporter_id], references: [id])
 }

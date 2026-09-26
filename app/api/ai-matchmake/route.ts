@@ -3,14 +3,24 @@ import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
-    // Lấy danh sách người chơi đang chờ tìm trận Xếp Hạng
+    // Tự động quét và cập nhật trạng thái 'Expired' cho các kèo đã quá hạn
+    await prisma.matchRequest.updateMany({
+      where: {
+        status: { in: ['Searching', 'Open'] },
+        expires_at: { lt: new Date() },
+      },
+      data: { status: 'Expired' },
+    });
+
+    // Lấy danh sách người chơi đang chờ tìm trận Xếp Hạng kèm toạ độ sân (GPS)
     const openRequests = await prisma.matchRequest.findMany({
       where: { 
         status: 'Searching',
         is_ranked: true 
       },
       include: { 
-        creator: true // Phải include để lấy được ELO của người tạo
+        creator: true,
+        court: true,
       },
     });
 
@@ -21,14 +31,24 @@ export async function POST(request: Request) {
       }, { status: 200 });
     }
 
-    // Chuẩn bị dữ liệu đúng chuẩn Pydantic để gửi sang Python
+    // Chuẩn bị dữ liệu đúng chuẩn Pydantic để gửi sang Python AI
     // Lọc trùng lặp (phòng trường hợp 1 người bấm tạo 2 request)
-    const uniquePlayers = new Map();
+    const uniquePlayers = new Map<string, {
+      id: string;
+      elo_rating: number;
+      court_id: string | null;
+      latitude: number | null;
+      longitude: number | null;
+    }>();
+
     openRequests.forEach(req => {
       if (!uniquePlayers.has(req.creator_id)) {
         uniquePlayers.set(req.creator_id, {
           id: req.creator.id,
-          elo_rating: req.creator.elo_rating
+          elo_rating: req.creator.elo_rating,
+          court_id: req.court_id || null,
+          latitude: req.court?.latitude ?? null,
+          longitude: req.court?.longitude ?? null,
         });
       }
     });
@@ -43,7 +63,7 @@ export async function POST(request: Request) {
 
     console.log(`Đang gửi ${availablePlayers.length} người chơi sang AI Python...`);
 
-    //  GỌI API SANG MÁY CHỦ PYTHON AI (MICROSERVICE)
+    // GỌI API SANG MÁY CHỦ PYTHON AI (MICROSERVICE)
     const aiResponse = await fetch('http://127.0.0.1:8000/api/matchmake', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -56,17 +76,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: aiData.message }, { status: 400 });
     }
 
-    // Bóc tách kết quả AI nhả về
-    const { player_a_id, player_b_id, ai_confidence_score } = aiData.data;
+    // Bóc tách kết quả AI nhả về (bao gồm court_id và distance_km)
+    const { player_a_id, player_b_id, ai_confidence_score, distance_km, court_id } = aiData.data;
 
-    // có thể nhúng đoạn code check Match Limit 24h vào ngay khúc này sau này)
-
-    // LƯU KẾT QUẢ VÀO DATABASE BẰNG PRISMA
-    // Tìm lại Request gốc của người A để làm mỏ neo tạo Match
+    // Tìm lại Request gốc của người A & B để làm mỏ neo tạo Match
     const requestA = openRequests.find(r => r.creator_id === player_a_id);
     const requestB = openRequests.find(r => r.creator_id === player_b_id);
 
     if (!requestA || !requestB) throw new Error("Mất dữ liệu request gốc");
+
+    const matchedCourtId = court_id || requestA.court_id || requestB.court_id || null;
 
     // Dùng Transaction để đảm bảo Tạo Match và Đóng Request diễn ra đồng thời
     const [newMatch, _] = await prisma.$transaction([
@@ -89,6 +108,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       message: 'AI đã chốt kèo và tạo trận đấu thành công!',
       match_id: newMatch.id,
+      court_id: matchedCourtId,
+      distance_km: distance_km ?? null,
       confidence: ai_confidence_score,
       players: `${player_a_id} vs ${player_b_id}`
     }, { status: 200 });
