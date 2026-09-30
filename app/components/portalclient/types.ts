@@ -1,4 +1,4 @@
-export interface UserItem {
+﻿export interface UserItem {
   id: string;
   full_name: string;
   phone: string;
@@ -37,12 +37,12 @@ export interface MatchHistoryItem {
 
 export function getEloTier(elo: number) {
   if (elo >= 1700) {
-    return { name: 'Cao thủ', code: 'master', tagBg: '#F5F5F7', tagColor: '#1D1D1F', borderColor: '#1D1D1F' };
+    return { name: 'Cao thủ (Master)', code: 'master', tagBg: '#FEF3C7', tagColor: '#B45309', borderColor: '#FDE68A' };
   }
   if (elo >= 1500) {
-    return { name: 'Tiềm năng', code: 'contender', tagBg: '#F5F5F7', tagColor: '#0071E3', borderColor: '#B8DBFF' };
+    return { name: 'Tiềm năng (Contender)', code: 'contender', tagBg: '#ECFDF5', tagColor: '#059669', borderColor: '#A7F3D0' };
   }
-  return { name: 'Khởi đầu', code: 'rookie', tagBg: '#F5F5F7', tagColor: '#86868B', borderColor: '#E5E5E7' };
+  return { name: 'Khởi đầu (Rookie)', code: 'rookie', tagBg: '#F8FAFC', tagColor: '#64748B', borderColor: '#E2E8F0' };
 }
 
 export function maskPhone(phone: string) {

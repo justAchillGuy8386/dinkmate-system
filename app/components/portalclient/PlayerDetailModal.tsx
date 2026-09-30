@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Modal, Avatar, Tag, Button } from 'antd';
@@ -62,8 +62,8 @@ export default function PlayerDetailModal({
               bordered={false}
               style={{
                 borderRadius: 6,
-                background: user.is_provisional ? '#F5F5F7' : '#EBF5FF',
-                color: user.is_provisional ? '#86868B' : '#0071E3',
+                background: user.is_provisional ? '#F5F5F7' : '#ECFDF5',
+                color: user.is_provisional ? '#86868B' : '#059669',
                 fontSize: 12,
                 fontWeight: 500,
                 padding: '2px 8px',

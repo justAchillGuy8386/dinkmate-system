@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Button } from 'antd';
@@ -15,7 +15,8 @@ export default function MobileAppSection({ onOpenQrModal }: MobileAppSectionProp
         <div className="bg-white border border-[#E5E5E7] rounded-[6px] p-8 md:p-14">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7">
-              <div className="text-xs font-semibold tracking-widest text-[#86868B] uppercase mb-3">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-[6px] text-xs font-semibold tracking-wider text-[#059669] uppercase mb-4">
+                <span className="w-2 h-2 rounded-full bg-[#84CC16]"></span>
                 Ứng dụng di động DinkMate
               </div>
               <h2 className="text-3xl md:text-4xl font-extrabold text-[#1D1D1F] tracking-tight mb-4">
@@ -29,19 +30,19 @@ export default function MobileAppSection({ onOpenQrModal }: MobileAppSectionProp
 
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-3 text-sm text-[#1D1D1F]">
-                  <CheckOutlined style={{ color: '#0071E3' }} />
+                  <CheckOutlined style={{ color: '#059669' }} />
                   <span>Quét mã QR cột sân qua Camera trực tiếp</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-[#1D1D1F]">
-                  <CheckOutlined style={{ color: '#0071E3' }} />
+                  <CheckOutlined style={{ color: '#059669' }} />
                   <span>Xác thực vị trí GPS thực địa thời gian thực</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-[#1D1D1F]">
-                  <CheckOutlined style={{ color: '#0071E3' }} />
+                  <CheckOutlined style={{ color: '#059669' }} />
                   <span>Nhập tỉ số hai chiều bảo mật & nhận kết quả ELO tức thì</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-[#1D1D1F]">
-                  <CheckOutlined style={{ color: '#0071E3' }} />
+                  <CheckOutlined style={{ color: '#059669' }} />
                   <span>Hệ thống AI gợi ý đối thủ ghép cặp chuẩn trình độ</span>
                 </div>
               </div>
@@ -53,8 +54,8 @@ export default function MobileAppSection({ onOpenQrModal }: MobileAppSectionProp
                   height: 44,
                   padding: '0 24px',
                   borderRadius: 6,
-                  backgroundColor: '#1D1D1F',
-                  borderColor: '#1D1D1F',
+                  backgroundColor: '#059669',
+                  borderColor: '#059669',
                   color: '#FFFFFF',
                   fontWeight: 600,
                   fontSize: 14,
@@ -89,7 +90,8 @@ export default function MobileAppSection({ onOpenQrModal }: MobileAppSectionProp
                   <rect x="68" y="82" width="14" height="12" />
                 </svg>
               </div>
-              <div className="text-xs font-semibold text-[#1D1D1F] uppercase tracking-wider mb-1">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-[#1D1D1F] uppercase tracking-wider mb-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#84CC16]"></span>
                 DinkMate for iOS & Android
               </div>
               <div className="text-xs text-[#86868B] text-center">

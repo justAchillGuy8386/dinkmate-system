@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Button } from 'antd';
@@ -6,7 +6,8 @@ import { Button } from 'antd';
 export default function HeroSection() {
   return (
     <section className="pt-32 pb-24 px-6 text-center max-w-4xl mx-auto">
-      <div className="inline-block mb-4 text-xs font-semibold tracking-widest text-[#86868B] uppercase">
+      <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 bg-[#ECFDF5] border border-[#A7F3D0] rounded-[6px] text-xs font-semibold tracking-wider text-[#059669] uppercase">
+        <span className="w-2 h-2 rounded-full bg-[#84CC16]"></span>
         Hệ thống xếp hạng & Ghép kèo Pickleball
       </div>
       <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-[#1D1D1F] leading-[1.1] mb-6">
@@ -28,8 +29,8 @@ export default function HeroSection() {
             height: 48,
             padding: '0 32px',
             borderRadius: 6,
-            backgroundColor: '#1D1D1F',
-            borderColor: '#1D1D1F',
+            backgroundColor: '#059669',
+            borderColor: '#059669',
             color: '#FFFFFF',
             fontSize: 15,
             fontWeight: 600,

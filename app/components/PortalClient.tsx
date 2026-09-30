@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { ConfigProvider, message } from 'antd';
@@ -110,7 +110,7 @@ export default function PortalClient({
         token: {
           fontFamily: "'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
           borderRadius: 6,
-          colorPrimary: '#0071E3',
+          colorPrimary: '#059669',
           colorText: '#1D1D1F',
           colorTextSecondary: '#86868B',
           colorBorder: '#E5E5E7',
@@ -150,7 +150,7 @@ export default function PortalClient({
           },
           Input: {
             borderRadius: 6,
-            activeBorderColor: '#0071E3',
+            activeBorderColor: '#059669',
             hoverBorderColor: '#86868B',
           },
         },

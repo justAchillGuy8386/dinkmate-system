@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { Table, Input, Segmented, Tag, Avatar, Button, Empty } from 'antd';
@@ -35,7 +35,7 @@ export default function LeaderboardSection({
         const actualRank = initialUsers.findIndex((u) => u.id === record.id) + 1;
         if (actualRank === 1) {
           return (
-            <span className="inline-flex items-center justify-center w-7 h-7 bg-[#1D1D1F] text-white text-xs font-semibold rounded-[6px]">
+            <span className="inline-flex items-center justify-center w-7 h-7 bg-[#059669] text-white text-xs font-bold rounded-[6px]">
               1
             </span>
           );
@@ -105,8 +105,8 @@ export default function LeaderboardSection({
                     bordered={false}
                     style={{
                       borderRadius: 6,
-                      background: '#EBF5FF',
-                      color: '#0071E3',
+                      background: '#ECFDF5',
+                      color: '#059669',
                       fontSize: 11,
                       padding: '0 6px',
                     }}
@@ -197,7 +197,7 @@ export default function LeaderboardSection({
           onClick={() => onSelectUser(record)}
           style={{
             borderRadius: 6,
-            color: '#0071E3',
+            color: '#059669',
             fontSize: 13,
             fontWeight: 500,
           }}

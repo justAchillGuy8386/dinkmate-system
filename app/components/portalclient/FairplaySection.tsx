@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import {
@@ -13,7 +13,7 @@ export default function FairplaySection() {
     <section id="fairplay" className="py-32 px-6 bg-[#F5F5F7] border-t border-[#E5E5E7]">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-20">
-          <div className="text-xs font-semibold tracking-widest text-[#86868B] uppercase mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-[6px] text-xs font-semibold tracking-wider text-[#059669] uppercase mb-3">
             Tiêu chuẩn công bằng
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#1D1D1F] mb-3">
@@ -28,7 +28,7 @@ export default function FairplaySection() {
           {/* Pillar 1 */}
           <div className="bg-white border border-[#E5E5E7] rounded-[6px] p-8 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-semibold tracking-wider text-[#86868B] uppercase mb-3">
+              <div className="text-xs font-semibold tracking-wider text-[#059669] uppercase mb-3">
                 TẦNG 1 · ĐỊA VỊ VẬT LÝ
               </div>
               <h3 className="text-xl font-bold text-[#1D1D1F] mb-3">
@@ -41,14 +41,14 @@ export default function FairplaySection() {
               </p>
             </div>
             <div className="text-xs font-medium text-[#1D1D1F] pt-4 border-t border-[#E5E5E7] flex items-center gap-2">
-              <CompassOutlined /> Kiểm tra bán kính thực địa tự động
+              <CompassOutlined style={{ color: '#059669' }} /> Kiểm tra bán kính thực địa tự động
             </div>
           </div>
 
           {/* Pillar 2 */}
           <div className="bg-white border border-[#E5E5E7] rounded-[6px] p-8 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-semibold tracking-wider text-[#86868B] uppercase mb-3">
+              <div className="text-xs font-semibold tracking-wider text-[#059669] uppercase mb-3">
                 TẦNG 2 · XÁC THỰC CỘT SÂN
               </div>
               <h3 className="text-xl font-bold text-[#1D1D1F] mb-3">
@@ -60,14 +60,14 @@ export default function FairplaySection() {
               </p>
             </div>
             <div className="text-xs font-medium text-[#1D1D1F] pt-4 border-t border-[#E5E5E7] flex items-center gap-2">
-              <QrcodeOutlined /> Quét QR trực tiếp qua Camera điện thoại
+              <QrcodeOutlined style={{ color: '#059669' }} /> Quét QR trực tiếp qua Camera điện thoại
             </div>
           </div>
 
           {/* Pillar 3 */}
           <div className="bg-white border border-[#E5E5E7] rounded-[6px] p-8 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-semibold tracking-wider text-[#86868B] uppercase mb-3">
+              <div className="text-xs font-semibold tracking-wider text-[#059669] uppercase mb-3">
                 TẦNG 3 · ĐỐI SOÁT ĐỘC LẬP
               </div>
               <h3 className="text-xl font-bold text-[#1D1D1F] mb-3">
@@ -80,14 +80,14 @@ export default function FairplaySection() {
               </p>
             </div>
             <div className="text-xs font-medium text-[#1D1D1F] pt-4 border-t border-[#E5E5E7] flex items-center gap-2">
-              <LockOutlined /> Bảo mật tỉ số hai chiều độc lập
+              <LockOutlined style={{ color: '#059669' }} /> Bảo mật tỉ số hai chiều độc lập
             </div>
           </div>
 
           {/* Pillar 4 */}
           <div className="bg-white border border-[#E5E5E7] rounded-[6px] p-8 flex flex-col justify-between">
             <div>
-              <div className="text-xs font-semibold tracking-wider text-[#86868B] uppercase mb-3">
+              <div className="text-xs font-semibold tracking-wider text-[#059669] uppercase mb-3">
                 TẦNG 4 · TOÀN VẸN HỆ THỐNG
               </div>
               <h3 className="text-xl font-bold text-[#1D1D1F] mb-3">
@@ -100,7 +100,7 @@ export default function FairplaySection() {
               </p>
             </div>
             <div className="text-xs font-medium text-[#1D1D1F] pt-4 border-t border-[#E5E5E7] flex items-center gap-2">
-              <SafetyCertificateOutlined /> Giám sát toàn vẹn thời gian thực
+              <SafetyCertificateOutlined style={{ color: '#059669' }} /> Giám sát toàn vẹn thời gian thực
             </div>
           </div>
         </div>

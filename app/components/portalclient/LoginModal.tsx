@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Modal, Form, Input, Button, Alert } from 'antd';
@@ -147,8 +147,8 @@ export default function LoginModal({ open, onClose, onLoginSuccess }: LoginModal
               width: '100%',
               height: 44,
               borderRadius: 6,
-              backgroundColor: '#1D1D1F',
-              borderColor: '#1D1D1F',
+              backgroundColor: '#059669',
+              borderColor: '#059669',
               color: '#FFFFFF',
               fontWeight: 600,
               fontSize: 14,
@@ -164,7 +164,7 @@ export default function LoginModal({ open, onClose, onLoginSuccess }: LoginModal
         <button
           type="button"
           onClick={handleFillDemo}
-          className="text-[#0071E3] hover:underline font-medium cursor-pointer"
+          className="text-[#059669] hover:underline font-medium cursor-pointer"
         >
           Dùng tài khoản mẫu
         </button>
